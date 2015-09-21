@@ -1,13 +1,13 @@
 <html>
 <head>
-<meta charset="Shift-JIS">
+<meta charset="UTF-8">
 <script src="js/jquery-1.7.2.min.js"></script>
 <script src="js/jqModal.js"></script>
 <link rel="stylesheet" type="text/css" href="css/jqModal.css" />
 <script type='text/javascript' src='js/md5.min.js'></script>
 <script src="js/cryptico-min.js"></script>
 <script type="text/javascript">
-//ftableƒIƒuƒWƒFƒNƒg‚æ‚èmenu‚Ìhtml‚ğì¬
+//ftableã‚ªãƒ–ã‚¸ã‚§ã‚¯ãƒˆã‚ˆã‚Šmenuã®htmlã‚’ä½œæˆ
 var getTableHtml = function(ftable){
 
     var type,typestr,itemHtml;
@@ -35,7 +35,7 @@ var getTableHtml = function(ftable){
 
 };
 
-//menu‚Ìexpand-icon‚ÌCanvas•`ÊB
+//menuã®expand-iconã®Canvasæå†™ã€‚
 (function() {
     var a = 7;
     var a2 = a / 2;
@@ -68,20 +68,20 @@ $(function(){
      */
     var setLocalStorageEncryptItem = function(key,value,publicKey){
         if(localStorage.getItem("sopt")){
-            //ˆÃ†‰»‚µ‚È‚¢
+            //æš—å·åŒ–ã—ãªã„
             localStorage.setItem(key,value);
         }else{
-            //ˆÃ†‰»
+            //æš—å·åŒ–
             localStorage.setItem(key,cryptico.encrypt(value,publicKey).cipher);
         }
     };
 
     var getLocalStorageEncryptItem = function(key,secretKey){
         if(localStorage.getItem("sopt")){
-            //ˆÃ†‰»‚µ‚È‚¢
+            //æš—å·åŒ–ã—ãªã„
             return localStorage.getItem(key);
         }else{
-            //ˆÃ†‰»
+            //æš—å·åŒ–
             return cryptico.decrypt(localStorage.getItem(key),secretKey).plaintext;
         }
     };
@@ -96,7 +96,7 @@ $(function(){
     };
 
     state=0;
-    //Loginó‘Ô‚Ì•Û‘¶AƒnƒbƒVƒ…‰»‚µ‚½password‚Ì•Û‘¶
+    //LoginçŠ¶æ…‹ã®ä¿å­˜ã€ãƒãƒƒã‚·ãƒ¥åŒ–ã—ãŸpasswordã®ä¿å­˜
     $("#loginsave").click(function(){
         if($(this).attr("checked")){
             if(secretKey){
@@ -108,22 +108,22 @@ $(function(){
     });
 
 	$("#loginsecurity").attr("disabled","disabled");
-    //ƒIƒvƒVƒ‡ƒ“€–Úƒ`ƒFƒbƒN
+    //ã‚ªãƒ—ã‚·ãƒ§ãƒ³é …ç›®ãƒã‚§ãƒƒã‚¯
     if(localStorage.getItem("sopt")){
         $("#loginsecurity").attr("checked","checked");
     }else{
         $("#loginsecurity").removeAttr("checked");
     }
-    //€–Ú‚ÌˆÃ†‰»
+    //é …ç›®ã®æš—å·åŒ–
     $("#loginsecurity").click(function(){
-        //ƒNƒbƒVƒ‡ƒ“ƒy[ƒW‚ğ“ü‚ê‚éB
+        //ã‚¯ãƒƒã‚·ãƒ§ãƒ³ãƒšãƒ¼ã‚¸ã‚’å…¥ã‚Œã‚‹ã€‚
 
-        //loginó‘Ô‚É‚ ‚éê‡‚Éˆ—
+        //loginçŠ¶æ…‹ã«ã‚ã‚‹å ´åˆã«å‡¦ç†
         if(secretKey){
             if($(this).attr("checked")){
-                //ˆÃ†‰»‚µ‚È‚¢ê‡
+                //æš—å·åŒ–ã—ãªã„å ´åˆ
                 localStorage.setItem("sopt",pass);
-                //ˆÃ†‰»‰ğœ
+                //æš—å·åŒ–è§£é™¤
                 for(var key in localStorage){
                     if(key!="sopt" && key!="sec"){
                         var value = localStorage.getItem(key);
@@ -131,7 +131,7 @@ $(function(){
                     }
                 }
             }else{
-                //ˆÃ†‰»ˆ—
+                //æš—å·åŒ–å‡¦ç†
                 localStorage.removeItem("sopt");
                 secretKey = cryptico.generateRSAKey(pass,1024);
                 publicKey = cryptico.publicKeyString(secretKey);
@@ -151,7 +151,7 @@ $(function(){
         $("#createError").empty();
         pass = $("#createPass1").val();
         if(pass!=$("#createPass2").val()){
-            $("#createError").html("Password‚ªˆÙ‚È‚Á‚Ä‚¢‚Ü‚·B");
+            $("#createError").html("PasswordãŒç•°ãªã£ã¦ã„ã¾ã™ã€‚");
             return false;
         }
         pass = CybozuLabs.MD5.calc(pass);
@@ -159,7 +159,7 @@ $(function(){
         publicKey = cryptico.publicKeyString(cryptico.generateRSAKey(pass,1024));
         /*
          if(localStorage.getItem(cryptico.encrypt("newid",key))!=undefined){
-         $("#createError").html("‚»‚ÌPassword‚Í¶¬‚Å‚«‚Ü‚¹‚ñB");
+         $("#createError").html("ãã®Passwordã¯ç”Ÿæˆã§ãã¾ã›ã‚“ã€‚");
          return;
          }
          */
@@ -173,7 +173,7 @@ $(function(){
         setLocalStorageEncryptItem("f_table",JSON.stringify(ftable),publicKey);
         setLocalStorageEncryptItem("1",JSON.stringify({url:"",items:[{item:"AccountID",value:"",mask:""},{item:"Password",value:"",mask:"checked"},{item:"",value:"",mask:""},{item:"",value:"",mask:""}],memo:""}),publicKey);
 
-        $("#createError").html("¶¬‚µ‚Ü‚µ‚½B");
+        $("#createError").html("ç”Ÿæˆã—ã¾ã—ãŸã€‚");
         publicKey = undefined;
         return false;
     });
@@ -192,21 +192,21 @@ $(function(){
             secretKey = new Object();
             publicKey = new Object();
 
-            //ˆÃ†‰»‚µ‚È‚¢ƒIƒvƒVƒ‡ƒ“‚ª‘¶İ
+            //æš—å·åŒ–ã—ãªã„ã‚ªãƒ—ã‚·ãƒ§ãƒ³ãŒå­˜åœ¨
             if(tmp!=pass){
-                $("#loginError").html("login‚É¸”s‚µ‚Ü‚µ‚½B");
+                $("#loginError").html("loginã«å¤±æ•—ã—ã¾ã—ãŸã€‚");
                 return false;
             }
             newid = localStorage.getItem("newid");
         }else{
-            //’Êíˆ—
+            //é€šå¸¸å‡¦ç†
             secretKey = cryptico.generateRSAKey(pass,1024);
             publicKey = cryptico.publicKeyString(secretKey);
 
             tmp = localStorage.getItem("newid");
             tmp = cryptico.decrypt(tmp,secretKey);
             if(tmp==undefined || tmp.plaintext==undefined || tmp.plaintext.match(/[^0-9]/g)){
-                $("#loginError").html("login‚É¸”s‚µ‚Ü‚µ‚½B");
+                $("#loginError").html("loginã«å¤±æ•—ã—ã¾ã—ãŸã€‚");
                 return false;
             }
             newid = tmp.plaintext;
@@ -219,10 +219,10 @@ $(function(){
         var fhtml = getTableHtml(ftable);
 
         $("#menu").html(fhtml);
-        //æ“ª‚ÌƒtƒHƒ‹ƒ_‚ÍƒfƒtƒHƒ‹ƒg‚Å“WŠJ‚·‚éB
+        //å…ˆé ­ã®ãƒ•ã‚©ãƒ«ãƒ€ã¯ãƒ‡ãƒ•ã‚©ãƒ«ãƒˆã§å±•é–‹ã™ã‚‹ã€‚
         $("#menu > .folder").attr("expanded","true").next().show();
 
-        //password‘‚«Š·‚¦•s‰Â
+        //passwordæ›¸ãæ›ãˆä¸å¯
         $("#pswd").attr("disabled","disabled");
         $("#login").hide();
         $("#logout").show();
@@ -250,14 +250,14 @@ $(function(){
         $("#pswd").removeAttr("disabled");
         $("#menu").empty();
         $("#main").empty();
-		//empty‚Å‚ÍƒƒOƒAƒEƒg‚µ‚½Œã‚Å•œ‹A‚Å‚«‚È‚¢‚µ
-		//hide‚È‚Ç‚Å‰B‚·‚¾‚¯‚ÍƒZƒLƒ…ƒŠƒeƒB“I‚É‚æ‚­‚È‚¢B
-		//‚µ‚Á‚©‚èŠe€–Ú‚ğ‰Šú‰»‚·‚é•K—v‚ª‚ ‚éB
+		//emptyã§ã¯ãƒ­ã‚°ã‚¢ã‚¦ãƒˆã—ãŸå¾Œã§å¾©å¸°ã§ããªã„ã—
+		//hideãªã©ã§éš ã™ã ã‘ã¯ã‚»ã‚­ãƒ¥ãƒªãƒ†ã‚£çš„ã«ã‚ˆããªã„ã€‚
+		//ã—ã£ã‹ã‚Šå„é …ç›®ã‚’åˆæœŸåŒ–ã™ã‚‹å¿…è¦ãŒã‚ã‚‹ã€‚
         $("#login").show();
         $("#logout").hide();
     });
 
-    //ModalWindowİ’è
+    //ModalWindowè¨­å®š
     //$(".jqmWindow").jqm();
     //$("#newaccount").click(function(){$("#jqmbox").html($("#newaccountbox").html());});
     //$("#note").click(function(){$("#jqmbox").html($("#notebox").html());});
@@ -265,7 +265,7 @@ $(function(){
     $("#accountbox").jqm({trigger:'#newaccount'});
     $("#notebox").jqm({trigger:'#note'});
 
-    //‰‰ñ‹N“®iƒpƒXƒ[ƒh‚ªİ’è‚³‚ê‚Ä‚¢‚È‚¢ê‡j
+    //åˆå›èµ·å‹•ï¼ˆãƒ‘ã‚¹ãƒ¯ãƒ¼ãƒ‰ãŒè¨­å®šã•ã‚Œã¦ã„ãªã„å ´åˆï¼‰
     if(localStorage.getItem("newid")==undefined){
         $("#newaccount").click();
         $("#createPass1").focus();
@@ -273,7 +273,7 @@ $(function(){
         $("#pswd").focus();
     }
 
-    //‰‰ñƒŒƒCƒAƒEƒgB
+    //åˆå›ãƒ¬ã‚¤ã‚¢ã‚¦ãƒˆã€‚
     $("#logout").css("display","none");
 
     $(".openbtn").click(function(){
@@ -286,7 +286,7 @@ $(function(){
         $("#idtxt").blur();
     });
 
-    //ƒtƒHƒ‹ƒ_‚ÌƒCƒxƒ“ƒgŠ„‚è“–‚Ä
+    //ãƒ•ã‚©ãƒ«ãƒ€ã®ã‚¤ãƒ™ãƒ³ãƒˆå‰²ã‚Šå½“ã¦
     $(".folder").css("cursor","pointer").live("click",function(){
         if($(this).attr("expanded")==undefined){
             $(this).attr("expanded","true");
@@ -298,7 +298,7 @@ $(function(){
     });
     
     
-    //ƒtƒ@ƒCƒ‹‚ÌƒCƒxƒ“ƒgŠ„‚è“–‚Ä
+    //ãƒ•ã‚¡ã‚¤ãƒ«ã®ã‚¤ãƒ™ãƒ³ãƒˆå‰²ã‚Šå½“ã¦
     $(".file").live("click",function(){
         $(this).parent().children().removeClass("select");
         $(this).addClass("select");
@@ -326,7 +326,7 @@ $(function(){
 		checkbx.removeAttr("checked");
 		//$("#maincheck"+n).attr("checked","checked");
 	    }
-		//click‚ÌƒoƒO?ƒ`ƒFƒbƒNó‘Ô‚ªØ‚è‘Ö‚í‚ç‚È‚¢‚ÅclickƒCƒxƒ“ƒg‚ªŒÄ‚Î‚ê‚éB
+		//clickã®ãƒã‚°?ãƒã‚§ãƒƒã‚¯çŠ¶æ…‹ãŒåˆ‡ã‚Šæ›¿ã‚ã‚‰ãªã„ã§clickã‚¤ãƒ™ãƒ³ãƒˆãŒå‘¼ã°ã‚Œã‚‹ã€‚
 	    checkbx.click();
 	    if(checkbx.attr("checked")){
 	    	checkbx.removeAttr("checked");
@@ -356,7 +356,7 @@ $(function(){
 
 	valnode.empty();
         if($(this).attr("checked")){
-            //checked==mask‰»
+            //checked==maskåŒ–
             valnode.html('<input type="password" id="'+tmpid+'" value="'+tmpval+'">');
         }else{
             valnode.html('<input type="text" id="'+tmpid+'" value="'+tmpval+'">');
@@ -364,9 +364,9 @@ $(function(){
 
     });
 
-    //V‹K€–Úì¬
+    //æ–°è¦é …ç›®ä½œæˆ
     $("#newitem").click(function(){
-        //rootƒtƒHƒ‹ƒ_‚Ì––”ö‚É’Ç‰Á
+        //rootãƒ•ã‚©ãƒ«ãƒ€ã®æœ«å°¾ã«è¿½åŠ 
         $("#menu0").next().append('<div class="file" id="menu'+newid+'"><span class="label item"></span>'+'<span id="menutxt'+newid+'">child</span></div>');
 
         var fitem = {id:newid,name:"child",parentId:0,index:ftable.children.length};
@@ -383,13 +383,13 @@ $(function(){
 
     $("#mainsave").click(function(){
 		if($("#mainid").val()==""){
-			//id–¢İ’è
-			//V‹K€–Ú‚Æ‚µ‚Ä’Ç‰Á‚·‚éH
+			//idæœªè¨­å®š
+			//æ–°è¦é …ç›®ã¨ã—ã¦è¿½åŠ ã™ã‚‹ï¼Ÿ
 			return ;
 		}
         var title = $("#maintitle").val();
         if(title!=$("#maintmpt").val()){
-            //title‚Ì•ÏXA€–Ú–¼‚ÌÄ•`Ê‚Æ’l‚Ì•Û‘¶
+            //titleã®å¤‰æ›´ã€é …ç›®åã®å†æå†™ã¨å€¤ã®ä¿å­˜
             var id = $("#mainid").val();
             var fitem = fidhash[id];
             fitem.name = title;
@@ -418,7 +418,7 @@ $(function(){
 		var fhtml = getTableHtml(ftable);
 
         $("#menu").html(fhtml);
-        //æ“ª‚ÌƒtƒHƒ‹ƒ_‚ÍƒfƒtƒHƒ‹ƒg‚Å“WŠJ‚·‚éB
+        //å…ˆé ­ã®ãƒ•ã‚©ãƒ«ãƒ€ã¯ãƒ‡ãƒ•ã‚©ãƒ«ãƒˆã§å±•é–‹ã™ã‚‹ã€‚
         $("#menu > .folder").attr("expanded","true").next().show();
 		
 		setLocalStorageEncryptItem("f_table",JSON.stringify(ftable),publicKey);
@@ -430,7 +430,7 @@ $(function(){
     });
 
 
-    //LoginŒp‘±ˆ—‚Ìê‡
+    //Loginç¶™ç¶šå‡¦ç†ã®å ´åˆ
     pass = localStorage.getItem("sec");
     if(pass){
         state=1;
@@ -441,7 +441,7 @@ $(function(){
 </script>
 <style type="text/css">
     #box{
-        font-family: 'ƒƒCƒŠƒI',Meiryo,'ƒqƒ‰ƒMƒmŠpƒS Pro W3','Hiragino Kaku Gothic Pro',arial,sans-serif;
+        font-family: 'ãƒ¡ã‚¤ãƒªã‚ª',Meiryo,'ãƒ’ãƒ©ã‚®ãƒè§’ã‚´ Pro W3','Hiragino Kaku Gothic Pro',arial,sans-serif;
         position: absolute;
         left: 50%;
         height: 100%;
@@ -579,8 +579,8 @@ $(function(){
         <!--CreateAccount-->
         <div class="jqmWindow" id="accountbox">
             <h2>NewAccount</h2>
-            <p>V‚µ‚¢ƒAƒJƒEƒ“ƒg‚ğì¬‚µ‚Ü‚·B<br>
-                ƒpƒXƒ[ƒh‚Ì‚İ‚ğ“ü—Í‚µ‚Ä‚­‚¾‚³‚¢B</p>
+            <p>æ–°ã—ã„ã‚¢ã‚«ã‚¦ãƒ³ãƒˆã‚’ä½œæˆã—ã¾ã™ã€‚<br>
+                ãƒ‘ã‚¹ãƒ¯ãƒ¼ãƒ‰ã®ã¿ã‚’å…¥åŠ›ã—ã¦ãã ã•ã„ã€‚</p>
             <form id="createFrm">
                 <input id="createPass1" type="password"><br>
                 <input id="createPass2" type="password"><br>
@@ -597,7 +597,7 @@ $(function(){
                 <br>
                 <div class="folder"><span class="expand-icon"></span><label>Option</label></div>
                 <div class="child">
-                    <input type="checkbox" id="loginsave">ƒƒOƒCƒ“ó‘Ô‚Ì•Û‘¶@@<input type="checkbox" id="loginsecurity">ˆÃ†‰»‚µ‚È‚¢(‚‘¬‰»)<br>
+                    <input type="checkbox" id="loginsave">ãƒ­ã‚°ã‚¤ãƒ³çŠ¶æ…‹ã®ä¿å­˜ã€€ã€€<input type="checkbox" id="loginsecurity">æš—å·åŒ–ã—ãªã„(é«˜é€ŸåŒ–)<br>
                 </div>
             </form>
         </div>
@@ -627,19 +627,19 @@ $(function(){
 
         	</textarea>
         	<div class="right">
-            	<input type="button" value="•Û‘¶" id="mainsave">
-            	<input type="button" value="íœ" id="maindelete">
+            	<input type="button" value="ä¿å­˜" id="mainsave">
+            	<input type="button" value="å‰Šé™¤" id="maindelete">
         	</div>
     	</div>
     	<div class="clear">
-        	<a href="#" id="note">’ˆÓ–€</a>
+        	<a href="#" id="note">æ³¨æ„äº‹é …</a>
     	</div>
     </div>
     <div class="jqmWindow" id="notebox">
-        <h2>’ˆÓ–€</h2>
-        <p>ˆÃ†‰»‚µ‚Ä‚¢‚é‚½‚ßƒpƒXƒ[ƒh‚ğ–Y‚ê‚é‚Æ•œŒ³‚Å‚«‚Ü‚¹‚ñB</p>
-        <p>Loginó‘Ô‚ğ•Û‚·‚é‚±‚Æ‚ÍƒZƒLƒ…ƒŠƒeƒB‚Ì’á‰º‚ÉŒq‚ª‚è‚Ü‚·B</p>
-        <p>ˆ«ˆÓ‚Ì‚ ‚éƒy[ƒW‚Ì‰{——‚ÍƒNƒŠƒbƒvƒ{[ƒh‚ÉƒRƒs[‚µ‚½ƒpƒXƒ[ƒh‚È‚Ç‚Ì“à—e‚ªƒT[ƒo[‚É‘—M‚³‚ê‚é‰Â”\«‚ª‚ ‚è‚Ü‚·B</p>
+        <h2>æ³¨æ„äº‹é …</h2>
+        <p>æš—å·åŒ–ã—ã¦ã„ã‚‹ãŸã‚ãƒ‘ã‚¹ãƒ¯ãƒ¼ãƒ‰ã‚’å¿˜ã‚Œã‚‹ã¨å¾©å…ƒã§ãã¾ã›ã‚“ã€‚</p>
+        <p>LoginçŠ¶æ…‹ã‚’ä¿æŒã™ã‚‹ã“ã¨ã¯ã‚»ã‚­ãƒ¥ãƒªãƒ†ã‚£ã®ä½ä¸‹ã«ç¹‹ãŒã‚Šã¾ã™ã€‚</p>
+        <p>æ‚ªæ„ã®ã‚ã‚‹ãƒšãƒ¼ã‚¸ã®é–²è¦§ã¯ã‚¯ãƒªãƒƒãƒ—ãƒœãƒ¼ãƒ‰ã«ã‚³ãƒ”ãƒ¼ã—ãŸãƒ‘ã‚¹ãƒ¯ãƒ¼ãƒ‰ãªã©ã®å†…å®¹ãŒã‚µãƒ¼ãƒãƒ¼ã«é€ä¿¡ã•ã‚Œã‚‹å¯èƒ½æ€§ãŒã‚ã‚Šã¾ã™ã€‚</p>
     </div>
 </div>
 </body>
