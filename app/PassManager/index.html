@@ -1,0 +1,646 @@
+<html>
+<head>
+<meta charset="Shift-JIS">
+<script src="js/jquery-1.7.2.min.js"></script>
+<script src="js/jqModal.js"></script>
+<link rel="stylesheet" type="text/css" href="css/jqModal.css" />
+<script type='text/javascript' src='js/md5.min.js'></script>
+<script src="js/cryptico-min.js"></script>
+<script type="text/javascript">
+//ftableオブジェクトよりmenuのhtmlを作成
+var getTableHtml = function(ftable){
+
+    var type,typestr,itemHtml;
+    if(ftable.children!=undefined){
+        type = 1; //folder
+        classA = "folder";
+        itemHtml = "<span class='expand-icon'></span><span class='label folder-icon'></span>";
+    }else{
+        type = 0; //file
+        classA = "file";
+        itemHtml = "<span class='label item'></span>";
+    }
+    var html = "<div class='"+classA+"' id='menu" + ftable.id + "'>";
+    html += itemHtml+"<span id='menutxt"+ftable.id+"'>"+ftable.name+"</span></div>";
+
+    if(type){
+        html += "<div class='child'>";
+		ftable.children.sort(function(a,b){return a.index - b.index;})
+        for(var i=0;i<ftable.children.length;i++){
+            html += getTableHtml(ftable.children[i]);
+        }
+        html += "</div>";
+    }
+    return html;
+
+};
+
+//menuのexpand-iconのCanvas描写。
+(function() {
+    var a = 7;
+    var a2 = a / 2;
+    var ctx = document.getCSSCanvasContext('2d', 'tree-triangle', a + 1, a2 + 2);
+
+    ctx.fillStyle = '#000';
+    ctx.translate(.5, .5);
+
+    ctx.beginPath();
+    ctx.moveTo(0, 0);
+    ctx.lineTo(0, 1);
+    ctx.lineTo(a2, 1 + a2);
+    ctx.lineTo(a, 1);
+    ctx.lineTo(a, 0);
+    ctx.closePath();
+    ctx.fill();
+    ctx.stroke();
+})();
+
+$(function(){
+    /*
+     var pass;
+     var publicKey;
+     var secretKey;
+     var ftable;
+     var fidhash;
+     var newid;
+     var selectingItem;
+     var state=0;
+     */
+    var setLocalStorageEncryptItem = function(key,value,publicKey){
+        if(localStorage.getItem("sopt")){
+            //暗号化しない
+            localStorage.setItem(key,value);
+        }else{
+            //暗号化
+            localStorage.setItem(key,cryptico.encrypt(value,publicKey).cipher);
+        }
+    };
+
+    var getLocalStorageEncryptItem = function(key,secretKey){
+        if(localStorage.getItem("sopt")){
+            //暗号化しない
+            return localStorage.getItem(key);
+        }else{
+            //暗号化
+            return cryptico.decrypt(localStorage.getItem(key),secretKey).plaintext;
+        }
+    };
+
+    var setTableIDHash = function(fidhash,ftable){
+        fidhash[ftable.id] = ftable;
+        if(ftable.children!=undefined){
+            for(var i=0;i<ftable.children.length;i++){
+                setTableIDHash(fidhash,ftable.children[i]);
+            }
+        }
+    };
+
+    state=0;
+    //Login状態の保存、ハッシュ化したpasswordの保存
+    $("#loginsave").click(function(){
+        if($(this).attr("checked")){
+            if(secretKey){
+                localStorage.setItem("sec",pass);
+            }
+        }else{
+            localStorage.removeItem("sec");
+        }
+    });
+
+	$("#loginsecurity").attr("disabled","disabled");
+    //オプション項目チェック
+    if(localStorage.getItem("sopt")){
+        $("#loginsecurity").attr("checked","checked");
+    }else{
+        $("#loginsecurity").removeAttr("checked");
+    }
+    //項目の暗号化
+    $("#loginsecurity").click(function(){
+        //クッションページを入れる。
+
+        //login状態にある場合に処理
+        if(secretKey){
+            if($(this).attr("checked")){
+                //暗号化しない場合
+                localStorage.setItem("sopt",pass);
+                //暗号化解除
+                for(var key in localStorage){
+                    if(key!="sopt" && key!="sec"){
+                        var value = localStorage.getItem(key);
+                        localStorage.setItem(key,cryptico.decrypt(value,secretKey).plaintext);
+                    }
+                }
+            }else{
+                //暗号化処理
+                localStorage.removeItem("sopt");
+                secretKey = cryptico.generateRSAKey(pass,1024);
+                publicKey = cryptico.publicKeyString(secretKey);
+                for(var key in localStorage){
+                    if(key != "sec"){
+                        var value = localStorage.getItem(key);
+                        localStorage.setItem(key,cryptico.encrypt(value,publicKey).cipher);
+                    }
+                }
+            }
+        }
+
+    });
+
+    //createNewAccount
+    $("#createFrm").submit(function(){
+        $("#createError").empty();
+        pass = $("#createPass1").val();
+        if(pass!=$("#createPass2").val()){
+            $("#createError").html("Passwordが異なっています。");
+            return false;
+        }
+        pass = CybozuLabs.MD5.calc(pass);
+
+        publicKey = cryptico.publicKeyString(cryptico.generateRSAKey(pass,1024));
+        /*
+         if(localStorage.getItem(cryptico.encrypt("newid",key))!=undefined){
+         $("#createError").html("そのPasswordは生成できません。");
+         return;
+         }
+         */
+
+        var ftable = {id:0,name:"parent",index:0,
+            children:[{id:1,name:"child",parentId:0,index:0}]
+        };
+
+        newid = 2;
+        setLocalStorageEncryptItem("newid",newid+"",publicKey);
+        setLocalStorageEncryptItem("f_table",JSON.stringify(ftable),publicKey);
+        setLocalStorageEncryptItem("1",JSON.stringify({url:"",items:[{item:"AccountID",value:"",mask:""},{item:"Password",value:"",mask:"checked"},{item:"",value:"",mask:""},{item:"",value:"",mask:""}],memo:""}),publicKey);
+
+        $("#createError").html("生成しました。");
+        publicKey = undefined;
+        return false;
+    });
+
+    //Login
+    $("#loginFrm").submit(function(){
+        $("#loginError").empty();
+        if(!state){
+            pass = CybozuLabs.MD5.calc($("#pswd").val());
+        }
+
+        var tmp;
+
+        tmp = localStorage.getItem("sopt");
+        if(tmp){
+            secretKey = new Object();
+            publicKey = new Object();
+
+            //暗号化しないオプションが存在
+            if(tmp!=pass){
+                $("#loginError").html("loginに失敗しました。");
+                return false;
+            }
+            newid = localStorage.getItem("newid");
+        }else{
+            //通常処理
+            secretKey = cryptico.generateRSAKey(pass,1024);
+            publicKey = cryptico.publicKeyString(secretKey);
+
+            tmp = localStorage.getItem("newid");
+            tmp = cryptico.decrypt(tmp,secretKey);
+            if(tmp==undefined || tmp.plaintext==undefined || tmp.plaintext.match(/[^0-9]/g)){
+                $("#loginError").html("loginに失敗しました。");
+                return false;
+            }
+            newid = tmp.plaintext;
+        }
+
+        ftable = JSON.parse(getLocalStorageEncryptItem("f_table",secretKey));
+        fidhash = {};
+        setTableIDHash(fidhash,ftable);
+
+        var fhtml = getTableHtml(ftable);
+
+        $("#menu").html(fhtml);
+        //先頭のフォルダはデフォルトで展開する。
+        $("#menu > .folder").attr("expanded","true").next().show();
+
+        //password書き換え不可
+        $("#pswd").attr("disabled","disabled");
+        $("#login").hide();
+        $("#logout").show();
+
+		$("#loginsecurity").removeAttr("disabled");
+
+        if($("#loginsave").attr("checked")){
+            localStorage.setItem("sec",pass);
+        }
+
+        return false;
+        /*
+         var MattsRSAkey = cryptico.generateRSAKey(PassPhrase, Bits);
+         var MattsPublicKeyString = cryptico.publicKeyString(MattsRSAkey);
+         var EncryptionResult = cryptico.encrypt(PlainText, MattsPublicKeyString);
+         var DecryptionResult = cryptico.decrypt(CipherText, MattsRSAkey);
+
+         var EncryptionResult = cryptico.encrypt(PlainText, MattsPublicKeyString, SamsRSAkey);
+         */
+    });
+
+    //Logout
+    $("#logout").click(function(){
+        localStorage.removeItem("pass");
+        $("#pswd").removeAttr("disabled");
+        $("#menu").empty();
+        $("#main").empty();
+		//emptyではログアウトした後で復帰できないし
+		//hideなどで隠すだけはセキュリティ的によくない。
+		//しっかり各項目を初期化する必要がある。
+        $("#login").show();
+        $("#logout").hide();
+    });
+
+    //ModalWindow設定
+    //$(".jqmWindow").jqm();
+    //$("#newaccount").click(function(){$("#jqmbox").html($("#newaccountbox").html());});
+    //$("#note").click(function(){$("#jqmbox").html($("#notebox").html());});
+    //$("#newaccount").click(function(){$("#newaccountbox").jqmShow();});
+    $("#accountbox").jqm({trigger:'#newaccount'});
+    $("#notebox").jqm({trigger:'#note'});
+
+    //初回起動（パスワードが設定されていない場合）
+    if(localStorage.getItem("newid")==undefined){
+        $("#newaccount").click();
+        $("#createPass1").focus();
+    }else{
+        $("#pswd").focus();
+    }
+
+    //初回レイアウト。
+    $("#logout").css("display","none");
+
+    $(".openbtn").click(function(){
+        window.open($("#urltxt").val());
+    });
+
+    $(".copybtn").click(function(){
+        $("#idtxt").focus();
+        document.execCommand("copy");
+        $("#idtxt").blur();
+    });
+
+    //フォルダのイベント割り当て
+    $(".folder").css("cursor","pointer").live("click",function(){
+        if($(this).attr("expanded")==undefined){
+            $(this).attr("expanded","true");
+        }else{
+            $(this).removeAttr("expanded");
+        }
+        $(this).next().slideToggle("fast");
+
+    });
+    
+    
+    //ファイルのイベント割り当て
+    $(".file").live("click",function(){
+        $(this).parent().children().removeClass("select");
+        $(this).addClass("select");
+        var fitem = JSON.parse(getLocalStorageEncryptItem($(this).attr("id").substring(4),secretKey));
+
+        selectingItem = fitem;
+        $("#mainid").val($(this).attr("id").substring(4));
+        $("#maintmpt").val($(this).text());
+        $("#maintitle").val($(this).text());
+        $("#mainurl").val(fitem.url);
+        var n;
+        var item;
+        for(var i=0;i<fitem.items.length;i++){
+            n = i+1;
+            item = fitem.items[i];
+            $("#mainitem"+n).val(item.item);
+            $("#mainvalue"+n).val(item.value);
+            
+            var checkbx = $("#maincheck"+n);
+            
+	    if(item.mask){
+		checkbx.attr("checked","checked");
+		//$("#maincheck"+n).removeAttr("checked");
+	    }else{
+		checkbx.removeAttr("checked");
+		//$("#maincheck"+n).attr("checked","checked");
+	    }
+		//clickのバグ?チェック状態が切り替わらないでclickイベントが呼ばれる。
+	    checkbx.click();
+	    if(checkbx.attr("checked")){
+	    	checkbx.removeAttr("checked");
+	    }else{
+		checkbx.attr("checked","checked");
+	    }
+			
+        }
+        $("#mainmemo").val(fitem.memo);
+        $("#maintitle").focus();
+        /*
+         var html = 'Title<input type="text" value="'+$(this).text()+'"><br>'+
+         '<span class="openbtn"><img src="External-Link.png" alt="open link"></span>URL<input id="urltxt" type="text"><br>' +
+         '<span class="copybtn"><img src="Save.png" alt="copy"></span><input id="idtxt" type="text" value="AccountID"><input type="password" value=""><br>' +
+         '<input type="text" value="Password"><input type="text" value=""><br>' +
+         '<textarea id="memo"></textarea>';
+         $("#main").html(html);*/
+    });
+
+    //mask
+    $(".maskbtn").click(function(){
+        var valnode = $(this).prev();
+        var childnode = valnode.children();
+        //console.log(childnode);
+        var tmpval = childnode.val();
+        var tmpid = childnode.attr("id");
+
+	valnode.empty();
+        if($(this).attr("checked")){
+            //checked==mask化
+            valnode.html('<input type="password" id="'+tmpid+'" value="'+tmpval+'">');
+        }else{
+            valnode.html('<input type="text" id="'+tmpid+'" value="'+tmpval+'">');
+        }
+
+    });
+
+    //新規項目作成
+    $("#newitem").click(function(){
+        //rootフォルダの末尾に追加
+        $("#menu0").next().append('<div class="file" id="menu'+newid+'"><span class="label item"></span>'+'<span id="menutxt'+newid+'">child</span></div>');
+
+        var fitem = {id:newid,name:"child",parentId:0,index:ftable.children.length};
+        ftable.children.push(fitem);
+        fidhash[newid] = fitem;
+
+        setLocalStorageEncryptItem(newid,JSON.stringify({url:"",items:[{item:"AccountID",value:"",mask:""},{item:"Password",value:"",mask:"checked"},{item:"",value:"",madk:""},{item:"",value:"",mask:""}],memo:""}),publicKey);
+        setLocalStorageEncryptItem("f_table",JSON.stringify(ftable),publicKey);
+
+        $("#menu"+newid).click();
+        newid++;
+        setLocalStorageEncryptItem("newid",newid+"",publicKey);
+    });
+
+    $("#mainsave").click(function(){
+		if($("#mainid").val()==""){
+			//id未設定
+			//新規項目として追加する？
+			return ;
+		}
+        var title = $("#maintitle").val();
+        if(title!=$("#maintmpt").val()){
+            //titleの変更、項目名の再描写と値の保存
+            var id = $("#mainid").val();
+            var fitem = fidhash[id];
+            fitem.name = title;
+            $("#menutxt"+id).text(title);
+            setLocalStorageEncryptItem("f_table",JSON.stringify(ftable),publicKey);
+        }
+
+        var n;
+        var items = new Array();
+        for(var i=0;i<selectingItem.items.length;i++){
+            n = i+1;
+            items.push({item:$("#mainitem"+n).val(),value:$("#mainvalue"+n).val(),mask:$("#maincheck"+n).attr("checked")});
+        }
+
+        var fitem = {url:$("#mainurl").val(),items:items,memo:$("#mainmemo").val()};
+        setLocalStorageEncryptItem($("#mainid").val(),JSON.stringify(fitem),publicKey)
+    });
+
+    $("#maindelete").click(function(){
+		var id = $("#mainid").val();
+		var fitem = fidhash[id];
+		var parent = fidhash[fitem.parentId];
+		//var fitem2 = parent.children[fitem.index];
+		parent.children.splice(fitem.index,1);
+		
+		var fhtml = getTableHtml(ftable);
+
+        $("#menu").html(fhtml);
+        //先頭のフォルダはデフォルトで展開する。
+        $("#menu > .folder").attr("expanded","true").next().show();
+		
+		setLocalStorageEncryptItem("f_table",JSON.stringify(ftable),publicKey);
+		removeLocalStorage(id);
+		
+		$("#mainid").val("");
+		
+		//console.log(parent);
+    });
+
+
+    //Login継続処理の場合
+    pass = localStorage.getItem("sec");
+    if(pass){
+        state=1;
+        $("#loginFrm").submit();
+        $("#loginsave").attr("checked","");
+    }
+});
+</script>
+<style type="text/css">
+    #box{
+        font-family: 'メイリオ',Meiryo,'ヒラギノ角ゴ Pro W3','Hiragino Kaku Gothic Pro',arial,sans-serif;
+        position: absolute;
+        left: 50%;
+        height: 100%;
+        width: 700px;
+        margin-left: -350px;
+        /*border-style: groove;*/
+        padding: 0px;
+        margin-top: 0px;
+    }
+    #header{
+    //height: 10%;
+    }
+    #mcontainer{
+    	
+    }
+    .clear{
+    	clear:both;
+    }
+    #menu{
+        border: solid 1px #808080;
+        width: 29%;
+        //height: 100%;
+        float:left;
+    //margin: 0px;
+    //padding: 0.5em;
+        //overflow: auto;
+    }
+    #main{
+        border: solid 1px #808080;
+        width:70%;
+        height:auto;
+        float:right;
+    }
+    #mainmemo{
+        width:100%;
+        height:100px;
+    }
+    div.left{
+        float:left;
+        width:70%;
+        vertical-align:bottom;
+        margin-bottom:0px;
+    }
+    div.right{
+        width:20%;
+        float:right;
+        text-align:right;
+        vertical-align:bottom;
+    }
+    div.clear{
+        clear:both;
+        width:100%
+    }
+    .label{
+        padding-left:20px;
+        background-repeat: no-repeat;
+        background-position: center center;
+    }
+    .folder-icon{
+        background-image: url("data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABMAAAASCAYAAAC5DOVpAAAAGXRFWHRTb2Z0d2FyZQBBZG9iZSBJbWFnZVJlYWR5ccllPAAAAT5JREFUeNpi/P//PwO1ABMDFQELiGhKdEgDUjOxyKfXzT8wiyTDQAblVBSAGdzc3GD6wc3LDCuXbAJZQLRhjI0J9mmisiozLXQFIQKM/yD+//eD4cyFJwxPnn/EpRfD1SCXzcwoiWNgAMfDfwZ4fABpbRco5z9UHCr56/VDhp7uhTOhQcOI4k1QjDL++wM2gfE/0GUg/O8flP0XKPcXKvYXrOnn82t4wgzkM5BhSAaBDfnzDSIOxn/BYgQjAOyyv7/BBoFdgWwIyACYy35+IcKwvyDDfkE0/f4KFIC55h/E2aCw+vGZuKTxH6TpD9Cw358RrgEZAAl1oIu+Ep/OQC5jALnszw+IZuQsRqRBtMlOHy9sYeBiZyVa07efv3Ealj599YWZpLrC2CMOMztBiyByyyFGbBmdcdCVZwABBgAo2bSa1FOQxwAAAABJRU5ErkJggg==");
+    }
+
+    .folder[expanded] > .folder-icon{
+        background-image: url("data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABMAAAASCAMAAACO0hVbAAAAGXRFWHRTb2Z0d2FyZQBBZG9iZSBJbWFnZVJlYWR5ccllPAAAAMBQTFRF////gWA/gWA/////////gWA/ln1jmnxXnXlOtKidzqp0z6ty0alq2LyN5NKl6rVv7div9Lx09dWe+OO6++q9++q+++u+/M2D/NKM/NOO/Oy+/O2//c6E/e7A/e/A/fDA/uev/uiy/uq0/uy4/u68/vDA/vDB/vHB/9GF/9OI/9iQ/9iR/9mR/9mS/9qT/9qU/9qV/9uW/9yX/92Z/92a/96b/96c/9+d/9+f/9+h/+Cg/+Gh/+Kk/+Ol/+Sq/+auouO7LgAAAAV0Uk5TAD5mf4Db2tioAAAAl0lEQVQYGY3BMW7CQBCG0W92x03S0EcUuUIa7n+ZSFA6FvJudv7BQsJyyXvwHqNUNiF2Tv2k0lex82IdwypPIcDrd2YjRQ6hPwtw1unWeCnFNRxl+8o8a4T4hbZURzPnUAupk8bG6fOlRUj5D5yuSw4H7hGpFDBd2Tjzz5ICsQmWHBSOVkiw6aOw010BVioH3gOMylHwvgc8UlS4d10B6QAAAABJRU5ErkJggg==");
+    }
+
+    #title{
+        position:relative;
+        border-bottom:1px solid #333;
+        margin-bottom:20px;
+    }
+
+    #newaccount{
+        position:absolute;
+        right:0;
+        bottom:0
+    }
+
+    .item{
+        background-image: url("data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAGXRFWHRTb2Z0d2FyZQBBZG9iZSBJbWFnZVJlYWR5ccllPAAAA+VpVFh0WE1MOmNvbS5hZG9iZS54bXAAAAAAADw/eHBhY2tldCBiZWdpbj0i77u/IiBpZD0iVzVNME1wQ2VoaUh6cmVTek5UY3prYzlkIj8+IDx4OnhtcG1ldGEgeG1sbnM6eD0iYWRvYmU6bnM6bWV0YS8iIHg6eG1wdGs9IkFkb2JlIFhNUCBDb3JlIDUuMC1jMDYwIDYxLjEzNDc3NywgMjAxMC8wMi8xMi0xNzozMjowMCAgICAgICAgIj4gPHJkZjpSREYgeG1sbnM6cmRmPSJodHRwOi8vd3d3LnczLm9yZy8xOTk5LzAyLzIyLXJkZi1zeW50YXgtbnMjIj4gPHJkZjpEZXNjcmlwdGlvbiByZGY6YWJvdXQ9IiIgeG1sbnM6eG1wTU09Imh0dHA6Ly9ucy5hZG9iZS5jb20veGFwLzEuMC9tbS8iIHhtbG5zOnN0UmVmPSJodHRwOi8vbnMuYWRvYmUuY29tL3hhcC8xLjAvc1R5cGUvUmVzb3VyY2VSZWYjIiB4bWxuczp4bXA9Imh0dHA6Ly9ucy5hZG9iZS5jb20veGFwLzEuMC8iIHhtbG5zOmRjPSJodHRwOi8vcHVybC5vcmcvZGMvZWxlbWVudHMvMS4xLyIgeG1wTU06T3JpZ2luYWxEb2N1bWVudElEPSJ1dWlkOmYxMzk1YTI2LWY4MjUtODA0MS1hOTlkLWM4YTAxNDk2OGI1YiIgeG1wTU06RG9jdW1lbnRJRD0ieG1wLmRpZDoyRkQ0NUU2MDU5NjkxMUUwOUZCRkE2RjI2RDQ0NjNFNCIgeG1wTU06SW5zdGFuY2VJRD0ieG1wLmlpZDoyRkQ0NUU1RjU5NjkxMUUwOUZCRkE2RjI2RDQ0NjNFNCIgeG1wOkNyZWF0b3JUb29sPSJBZG9iZSBJbGx1c3RyYXRvciBDUzQiPiA8eG1wTU06RGVyaXZlZEZyb20gc3RSZWY6aW5zdGFuY2VJRD0idXVpZDowNDVjYmZiOS1lNDJmLTBkNGUtODMzOS1lZTFmNDRiNzY5MTMiIHN0UmVmOmRvY3VtZW50SUQ9InhtcC5kaWQ6Rjc3RjExNzQwNzIwNjgxMTlCMzBCNTJBM0E1MUZEODMiLz4gPGRjOnRpdGxlPiA8cmRmOkFsdD4gPHJkZjpsaSB4bWw6bGFuZz0ieC1kZWZhdWx0Ij5vMl9tYWc8L3JkZjpsaT4gPC9yZGY6QWx0PiA8L2RjOnRpdGxlPiA8L3JkZjpEZXNjcmlwdGlvbj4gPC9yZGY6UkRGPiA8L3g6eG1wbWV0YT4gPD94cGFja2V0IGVuZD0iciI/PulYUwwAAAD+SURBVDjLnZMhD4NADIXPoDAzGNQMBjM1g8EgFgzmzDIxPccvILOnySzLHGI/cr3lHXkUyJI1+QKEvkdbrsYsoxQ6YVR0eLcZieCEt3AXrkIrXJSpQ+5CPAgviGqIDrgPcRKeyJ2ZeNceIguOQibElLcTzjBw3LMvLRcKMqhxLcggEhrhBs13Jh3wUZFBMInIICPjR9CNNN2GxJUScxtcxVS+jz3EEe7Xgj+yMAhtbH3dYLgWv3nULRiqpIaxJ1WDzLgCHqI24YHmqqpJV660YfBsFSW9m1UeDlKsTmejDBLk9HyQ+Cj3qpJUncwcOcPWPji1eRa70f5apr/X+QPxgT58M5qK3wAAAABJRU5ErkJggg==");
+    }
+    h1{
+        margin-bottom:0;
+        line-height:1;
+    }
+    .expand-icon {
+        width: 16px;
+        height: 16px;
+        display: inline-block;
+        vertical-align: top;
+        position: relative;
+        top: 2px;
+        background-image: -webkit-canvas(tree-triangle);
+        background-position: 50% 50%;
+        background-repeat: no-repeat;
+        -webkit-transition: all .15s;
+        opacity: .6;
+        -webkit-transform: rotate(-90deg);
+    }
+    .folder[expanded] > .expand-icon{
+        -webkit-transform: rotate(0deg);
+    }
+    #triangleRight {
+        width: 0;
+        height: 0;
+        border-left: 10px solid gray;
+        border-top: 5px solid transparent;
+        border-bottom: 5px solid transparent;
+    }
+    .child{
+        display:none;
+        padding-left:2em;
+    }
+    .btn{
+        cursor:pointer;
+    }
+    .longsize{
+        width:100%;
+    }
+    .right{
+        text-align:right;
+    }
+    .hide{
+        display:none;
+    }
+    .select{
+        background-color:LightCyan
+    }
+</style>
+</head>
+<body>
+<div id="box">
+    <div id="header">
+        <div id="title"><h1>PasswordMemo</h1><a href="#" id="newaccount">NewAccount</a></div>
+        <!--CreateAccount-->
+        <div class="jqmWindow" id="accountbox">
+            <h2>NewAccount</h2>
+            <p>新しいアカウントを作成します。<br>
+                パスワードのみを入力してください。</p>
+            <form id="createFrm">
+                <input id="createPass1" type="password"><br>
+                <input id="createPass2" type="password"><br>
+                <input id="createButton" type="submit" value="createNewAccount">
+                <div id="createError"></div>
+            </form>
+        </div>
+        <div id="loginbox">
+            <form id="loginFrm">
+                <input id="pswd" type="password" tabindex="1">
+                <input id="login" type="submit" value="Login">
+                <input id="logout" type="button" value="Logout">
+                <span id="loginError"></span>
+                <br>
+                <div class="folder"><span class="expand-icon"></span><label>Option</label></div>
+                <div class="child">
+                    <input type="checkbox" id="loginsave">ログイン状態の保存　　<input type="checkbox" id="loginsecurity">暗号化しない(高速化)<br>
+                </div>
+            </form>
+        </div>
+    </div>
+    <div id="newitem"><a href="#">+NewItem</a></div>
+    <div id="mcontainer">
+    	<div id="menu">
+        	<!--
+      	<div class="folder">
+      	<span class="expand-icon"></span><span class="label folder-icon"></span>parent
+      	</div>
+      	<div class="child">
+      	<div class="file"><span class="label item"></span>child</div>
+      	</div>
+      	-->
+    	</div>
+    	<div id="main">
+        	<input type="hidden" value="" id="mainid"><input type="hidden" value="" id="maintmpt">
+        	Title<input type="text" class="longsize" id="maintitle"><br>
+        	<span class="openbtn btn"><img src="External-Link.png" alt="open link"></span>URL<input id="urltxt" type="text" class="longsize" id="mainurl"><br>
+        	<span class="copybtn btn"><img src="Save.png" alt="copy"></span><input type="text" value="AccountID" id="mainitem1" tabindex="2"><span><input type="text" value="" id="mainvalue1"></span><input type="checkbox" class="maskbtn" id="maincheck1" tabindex="3"><br>
+        	<span class="copybtn btn"><img src="Save.png" alt="copy"></span><input type="text" value="Password" id="mainitem2" tabindex="4"><span><input type="text" value="" id="mainvalue2"></span><input type="checkbox" class="maskbtn" id="maincheck2" tabindex="5"><br>
+        	<span class="copybtn btn"><img src="Save.png" alt="copy"></span><input type="text" value="" id="mainitem3" tabindex="6"><span><input type="text" value="" id="mainvalue3"></span><input type="checkbox" class="maskbtn" id="maincheck3" tabindex="7"><br>
+        	<span class="copybtn btn"><img src="Save.png" alt="copy"></span><input type="text" value="" id="mainitem4" tabindex="8"><span><input type="text" value="" id="mainvalue4"></span><input type="checkbox" class="maskbtn" id="maincheck4" tabindex="9"><br>
+        	Memo<br>
+        	<textarea id="mainmemo">
+
+        	</textarea>
+        	<div class="right">
+            	<input type="button" value="保存" id="mainsave">
+            	<input type="button" value="削除" id="maindelete">
+        	</div>
+    	</div>
+    	<div class="clear">
+        	<a href="#" id="note">注意事項</a>
+    	</div>
+    </div>
+    <div class="jqmWindow" id="notebox">
+        <h2>注意事項</h2>
+        <p>暗号化しているためパスワードを忘れると復元できません。</p>
+        <p>Login状態を保持することはセキュリティの低下に繋がります。</p>
+        <p>悪意のあるページの閲覧はクリップボードにコピーしたパスワードなどの内容がサーバーに送信される可能性があります。</p>
+    </div>
+</div>
+</body>
+</html>
