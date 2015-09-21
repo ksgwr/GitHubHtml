@@ -170,8 +170,8 @@ $.fn.suggest = function(settings){
         };
         // ajax利用のdefault実装。改行コードで区切られたTextを想定
         if(settings.url) {
-            settings.createSuggests = function(data) {
-                return createSuggestsDefault(data.split("\n"));
+            settings.createSuggests = function(data, value) {
+                return createSuggestsDefault(data.split("\n"), value);
             }
         } else if(isLocal) {
             // localのデフォルト実装
