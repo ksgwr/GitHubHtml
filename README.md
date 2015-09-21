@@ -12,10 +12,10 @@
 
 ### 必要ファイル
 
-jQuery
-https://github.com/ksgwr/GitHubHtml/blob/master/js/suggest-0.0.1.js
-https://github.com/ksgwr/GitHubHtml/blob/master/css/suggests.css
+* jQuery
+* https://github.com/ksgwr/GitHubHtml/blob/master/js/suggest-0.0.1.js
+* https://github.com/ksgwr/GitHubHtml/blob/master/css/suggests.css
 
 ### サンプルページ
 
-http://ksgwr.github.io/GitHubHtml/sample/suggest.html
+* http://ksgwr.github.io/GitHubHtml/sample/suggest.html
