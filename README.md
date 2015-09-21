@@ -1,4 +1,7 @@
 # JavaScript Library
+## License
+
+基本的にMIT Licenseで公開します
 
 ## 入力補助ライブラリ
 ### 特徴
