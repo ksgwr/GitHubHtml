@@ -379,7 +379,7 @@ $.fn.suggest = function(settings){
                 return false; //上カーソルで先頭に動くのを回避
             }
         });
-        if(setting.hideBlur) {
+        if(settings.hideBlur) {
             input.blur(function () {
                 if (!isMouseDown) {
                     table.hide();
