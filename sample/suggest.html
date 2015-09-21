@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8" />
+<link href="../css/suggests.css" rel="stylesheet" />
+<script src="../js/jquery-1.7.2.min.js"></script>
+<script src="../js/suggest-0.0.1.js"></script>
+<script>
+$(function(){
+
+    $("#simpleSuggest").suggest({
+       data:["aaa","aa","bbb","ccc","テスト","test"]
+    });
+
+    $("#ajaxSuggest").suggest({
+        url:"../data/test",
+        change:function(suggest,data,event){
+            console.log(this,suggest,data,event);
+        }
+    });
+
+    $("#complexSuggest").suggest({
+        data:["aaa","aa","bbb","ccc"],
+        // terminal==trueと組み合わせて、初回に候補を全部表示させる
+        createSuggests : function(data, value) {
+            console.log('createSuggest', data, value);
+            var suggests = [];
+            for(var i=0;i<data.length;i++){
+                if(data[i].indexOf(value)>=0){
+                    suggests.push(data[i]);
+                }
+            }
+            return suggests;
+        },
+        validate : function(){
+            console.log('validate');
+            return true;
+        },
+        change : function(suggest, data, event){
+            console.log('change', suggest, data, event);
+        },
+        beforeShow : function(table, suggest){
+            console.log('beforeShow',table, suggest);
+        },
+        determine : function(e){
+            console.log('determine', e);
+        },
+        terminal : true,
+        hideBlur : true
+    });
+
+    $("#checkSuggest").suggest({
+        eventOnly:true,
+        change : function(){
+            var val = $(this).val();
+            console.log('change',val);
+        }
+    });
+})
+</script>
+</head>
+<body>
+<div style="border:1px solid;margin:30px;padding:100px">
+    <p>サジェスト利用例</p>
+    <form id="testform">
+        <input name="test" id="simpleSuggest" type="text"/><input type="button" value="Test">
+    </form>
+</div>
+<div>
+    <p>ajax利用のサジェスト例</p>
+    <input id="ajaxSuggest" type="text"/>
+</div>
+<div>
+    <p>各イベントをハンドルする</p>
+    <input id="complexSuggest" type="text"/>
+</div>
+<div>
+    <p>テキスト変更の発生のみを検知する</p>
+    <input id="checkSuggest" type="text"/>
+</div>
+</body>
+</html>
