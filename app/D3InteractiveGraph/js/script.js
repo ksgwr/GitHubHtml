@@ -68,7 +68,7 @@ D3FUNC.offBrush = function() {
 	d3.selectAll('.brush').remove();
 };
 
-d3.tsv("/data/iris.tsv", function(error, data) {
+d3.tsv("data/iris.tsv", function(error, data) {
 	// xから最小のキリの良い値を返す
 	var rangeFloor = function(x) {
 		var digit = 0;
