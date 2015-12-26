@@ -1,0 +1,32 @@
+.point {
+  fill: #999;
+  stroke: #fff;
+}
+
+.point.scanned {
+  fill: orange;
+  fill-opacity: 1;
+  stroke: brown;
+}
+
+.point.selected {
+  fill: red;
+  fill-opacity: 1;
+}
+
+.node {
+  fill: none;
+  stroke: #ccc;
+  shape-rendering: crispEdges;
+}
+
+.overlay {
+  fill: none;
+  pointer-events: all;
+}
+
+.brush {
+    fill-opacity: 0.1;
+    stroke: #fff;
+    shape-rendering: crispEdges;
+}
