@@ -9,7 +9,7 @@
   stroke: brown;
 }
 
-.point.selected {
+.selected {
   fill: red;
   fill-opacity: 1;
 }
@@ -29,4 +29,25 @@
     fill-opacity: 0.1;
     stroke: #fff;
     shape-rendering: crispEdges;
+}
+
+.axis text {
+    font: 10px sans-serif;
+}
+
+.axis path,
+.axis line {
+    fill: none;
+    stroke: lightgray;
+    stroke-width: 2;
+    shape-rendering: crispEdges;
+}
+
+.grid .tick {
+    stroke: lightgrey;
+    stroke-opacity: 0.7;
+    shape-rendering: crispEdges;
+}
+.grid path {
+    stroke-width: 0;
 }
