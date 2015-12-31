@@ -16,6 +16,8 @@ D3FUNC.zoom = function() {
 	if (D3DATA.shiftKey) {
 		return;
 	}
+    D3DATA.xAxisNode.call(D3FUNC.xAxis);
+    D3DATA.yAxisNode.call(D3FUNC.yAxis);
 	//D3DATA.points.selectAll('text').attr('opacity', d3.event.scale > 5 ? 1 : 0);
 	D3DATA.points.selectAll('text').style('visibility', d3.event.scale > 5 ? 'visible' : 'hidden');
 	return D3DATA.points.attr("transform", D3FUNC.transform);
@@ -53,7 +55,7 @@ D3FUNC.onBrush = function() {
 					var y = d.PCAy;
 					if (extent[0][0] <= x && x < extent[1][0] &&
 						extent[0][1] <=y && y < extent[1][1]) {
-						d3.select(this).attr("fill", "red");
+						d3.select(this).attr('class', 'dataNode selected');
 					}
 				});
 			})
@@ -151,8 +153,6 @@ d3.tsv("data/iris.tsv", function(error, data) {
 	.attr("width", D3DATA.width)
 	.attr("height", D3DATA.height)
 	.append("g");
-	
-	
 
 	D3DATA.container = D3DATA.svg.append('svg');
 	
@@ -170,6 +170,18 @@ d3.tsv("data/iris.tsv", function(error, data) {
 		.on("zoom", D3FUNC.zoom)
 		.size([D3DATA.width, D3DATA.height])
 	);
+
+    //正方形になるようにticksの比率をあわせる
+    D3FUNC.xAxis = d3.svg.axis()
+        .scale(D3FUNC.scaleX).orient('bottom').tickSize(D3DATA.height-20).ticks(D3DATA.width/100);
+    D3FUNC.yAxis = d3.svg.axis()
+        .scale(D3FUNC.scaleY).orient('left').tickSize(D3DATA.width-20).ticks(D3DATA.height/100);
+
+    D3DATA.xAxisNode = D3DATA.container.append('g').attr('class', 'x axis')/*.attr('transform', 'translate(0,0)')*/;
+    D3DATA.yAxisNode = D3DATA.container.append('g').attr('class', 'y axis').attr('transform', 'translate('+D3DATA.width+',0)');
+
+    D3DATA.xAxisNode.call(D3FUNC.xAxis);
+    D3DATA.yAxisNode.call(D3FUNC.yAxis)/*.append('text').attr('y', -10).attr('x', 10).text("y")*/;
 
 	//データ点のグループ作成
 	D3DATA.points = D3DATA.container.selectAll('g')
@@ -191,7 +203,7 @@ d3.tsv("data/iris.tsv", function(error, data) {
 	.text(function(d) { return d.Species; })
 	.attr({
 		"font-family" : "sans-serif",
-		"font-size" : "20px",
+		"font-size" : "20px"
 	})
 	.style('visibility', 'hidden');
 
@@ -209,6 +221,11 @@ d3.tsv("data/iris.tsv", function(error, data) {
 		d3.select(this.parentNode).selectAll('circle.dataNode').attr("fill", D3FUNC.colorFunc);
 	})
 	.on("click", function(d) {
+        if (!D3DATA.isBrushing) {
+            //brushing中でないなら新規選択扱いで既存のセレクトを削除
+            d3.selectAll('circle.selected').attr('class', 'dataNode');
+        }
+        d3.select(this.parentNode).selectAll('circle.dataNode').attr('class', 'dataNode selected');
 		$("#selectTarget").text(JSON.stringify(d));
 		console.log(d);
 	});
