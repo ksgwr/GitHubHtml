@@ -2,17 +2,104 @@
 <html>
 <head>
 <meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Quadtree</title>
-<script src="js/d3.min.js" charset="utf-8"></script>
-<script src="js/jquery-2.1.4.min.js" charset="utf-8"></script>
-<script src="js/script.js" charset="utf-8"></script>
+<link rel="stylesheet" type="text/css" href="css/bootstrap.lumen.min.css" />
+<link rel="stylesheet" type="text/css" href="css/offcanvas.css" />
 <link rel="stylesheet" type="text/css" href="css/style.css" />
+<!--link rel="stylesheet" href="css/font-awesome.min.css"-->
+<script src="js/jquery-2.1.4.min.js" charset="utf-8"></script>
+<script src="js/bootstrap.min.js" charset="utf-8"></script>
+<script src="js/d3.min.js" charset="utf-8"></script>
+<script src="js/script.js" charset="utf-8"></script>
 </head>
 <body>
-<h1>iris</h1>
-<div id="selectTarget">
 
-</div>
+<div class="container">
+    <div class="row row-offcanvas row-offcanvas-right">
+
+        <div class="col-xs-12 col-sm-9">
+            <div id="main">
+                <h1>iris dataset</h1>
+                <p class="h5 pull-right">
+                    <button type="button" class="btn btn-default" aria-label="Zoom-in">
+                        <span class="glyphicon glyphicon-zoom-in"></span>
+                    </button>
+                    <button type="button" class="btn btn-default" aria-label="Zoom-out">
+                        <span class="glyphicon glyphicon-zoom-out"></span>
+                    </button>
+                    <button type="button" class="btn btn-default" aria-label="Move">
+                        <span class="glyphicon glyphicon-move"></span>
+                    </button>
+                    <button type="button" class="btn btn-default" aria-label="FullScreen">
+                        <span class="glyphicon glyphicon-fullscreen"></span>
+                    </button>
+                    <button type="button" class="btn btn-default" aria-label="SavePNG">
+                        <span class="glyphicon glyphicon-save"></span>
+                    </button>
+                    <button type="button" class="btn btn-default" aria-label="Brush">
+                        <span class="glyphicon glyphicon-stop"></span>
+                    </button>
+                </p>
+                <p class="pull-right visible-xs">
+                    <button type="button" class="btn btn-primary btn-xs" data-toggle="offcanvas">Toggle nav</button>
+                </p>
+            </div>
+        </div><!--/.col-xs-12.col-sm-9-->
+
+        <div class="col-xs-6 col-sm-3 sidebar-offcanvas" id="sidebar" role="navigation">
+            <div class="row">
+            <p class="h1 pull-right">
+            <a class="btn btn-default btn-sm" href="#">
+                <span class="glyphicon glyphicon-question-sign"></span> Help</a>
+            <a class="btn btn-default btn-sm" href="#">
+                <span class="glyphicon glyphicon-info-sign"></span> Information</a>
+            </p>
+            </div>
+
+            <div class="row" style="margin-top:20px;">
+                <div style="margin:20px">
+                    <form id="search-form" class="form-inline" role="form">
+                        <div class="input-group">
+                            <input type="text" class="form-control search-form" placeholder="Search..."  data-toggle="tooltip" data-placement="bottom" title="Input 'Field:Value'. Default field is LabelName.">
+                        <span class="input-group-btn"><button type="submit" class="btn btn-primary search-btn" data-target="#search-form" name="q"><span class="glyphicon glyphicon-search"></span>
+                        </button></span>
+                        </div>
+                    </form>
+                </div>
+
+                <p class="pull-left label label-primary">Search Results...</p>
+                <div class="well"><br>
+                    <p>None</p>
+                </div>
+
+                <p class="pull-left label label-default">Selecting...</p>
+                <div class="well"><br>
+                    <div id="selectTarget"></div>
+                    <p>None</p>
+                </div>
+
+                <div class="panel-group" id="accordion" role="tablist" aria-multiselectable="true">
+                    <div class="panel panel-default">
+                        <div class="panel-heading" role="tab" id="headingOne">
+                            <h4 class="panel-title">
+                                <a role="button" data-toggle="collapse" data-parent="#accordion" href="#collapseOne" aria-expanded="true" aria-controls="collapseOne">
+                                    <span class="glyphicon glyphicon-stats"></span> Statical Selecting Nodes
+                                </a>
+                            </h4>
+                        </div>
+                        <div id="collapseOne" class="panel-collapse collapse in" role="tabpanel" aria-labelledby="headingOne">
+                            <div class="panel-body">
+                                Not calculated
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div><!--/.sidebar-offcanvas-->
+
+    </div><!--/row-->
+</div><!--/.container-->
 
 </body>
 </html>
