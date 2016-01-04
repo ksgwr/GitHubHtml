@@ -2,10 +2,12 @@ $(function() {
 
 //global data
 D3DATA = {
-	width : 900,
-	height : 800,
 	isBrushing : false
 };
+var main = $("#main");
+D3DATA.width = main.width();
+D3DATA.height = main.width();
+
 D3FUNC = {};
 
 D3FUNC.transform = function(d) {
@@ -149,7 +151,7 @@ d3.tsv("data/iris.tsv", function(error, data) {
 	.domain([rangeFloor(domainY[0]), rangeCeil(domainY[1])])
 	.range([0, D3DATA.height]);
 
-	D3DATA.svg = d3.select("body").append("svg")
+	D3DATA.svg = d3.select("#main").append("svg")
 	.attr("width", D3DATA.width)
 	.attr("height", D3DATA.height)
 	.append("g");
@@ -253,4 +255,12 @@ d3.select(window)
 	}
 });
 
+});
+
+$(document).ready(function () {
+    $('[data-toggle="tooltip"]').tooltip();
+
+    $('[data-toggle="offcanvas"]').click(function () {
+        $('.row-offcanvas').toggleClass('active')
+    });
 });
