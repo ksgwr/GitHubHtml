@@ -1,12 +1,14 @@
-$(function() {
+GraphContentLoads = function() {
 
 //global data
 D3DATA = {
 	isBrushing : false
 };
 var main = $("#main");
-D3DATA.width = main.width();
-D3DATA.height = main.width();
+var width = main.width();
+var height = $(window).height();
+console.log(width,height);
+D3DATA.width = D3DATA.height = width > height ? height : width;
 
 D3FUNC = {};
 
@@ -255,7 +257,7 @@ d3.select(window)
 	}
 });
 
-});
+};
 
 $(document).ready(function () {
     $('[data-toggle="tooltip"]').tooltip();
