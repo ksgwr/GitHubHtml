@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <title>A-Frame street view</title>
+    <script src="js/aframe-0.8.0.min.js"></script>
+    <script type="text/javascript">
+      // download from : https://www.caret-works.net/other/other.html
+      MAP = [
+        [
+          {bg:'img/sphere_beach.jpg'},
+          {bg:'img/sphere_park.jpg'},
+	  {bg:'img/sphere_tunnel.jpg'}
+        ],
+	[
+	  null,
+          {bg:'img/sphere_funajima_bridge.jpg'},
+          null
+	]
+      ];
+
+      CHANGE_STATE = function(x, y) {
+	document.querySelector('#background').setAttribute('src', MAP[x][y].bg);
+
+	var setArrow = function(elm, visible, x, y) {
+           elm.setAttribute('visible', visible && MAP[x][y] != null);
+	   elm.setAttribute('x', x);
+           elm.setAttribute('y', y);
+        };
+
+	setArrow(document.querySelector('#forward'), y+1 < MAP[x].length, x, y+1);
+	setArrow(document.querySelector('#backward'), y-1 >= 0, x, y-1);
+	setArrow(document.querySelector('#right'), x+1 < MAP.length, x+1, y);
+	setArrow(document.querySelector('#left'), x-1 >= 0, x-1, y);
+      };
+
+      AFRAME.registerComponent('cursor-listener', {
+        init: function () {
+        this.el.addEventListener('mouseenter', function (evt) {
+	  this.setAttribute('scale', '1.2 1.2 1.2');
+        });
+	this.el.addEventListener('mouseleave', function (evt) {
+	  this.setAttribute('scale', '1 1 1');
+        });
+	this.el.addEventListener('click', function (evt) {
+	  CHANGE_STATE(parseInt(this.getAttribute('x'), 10), parseInt(this.getAttribute('y'), 10));
+        }, false);
+        }
+      });
+    </script>
+  </head>
+  <body>
+    <a-scene>
+      <a-sky id="background" rotation="0 -130 0"></a-sky>
+
+      <a-entity position="0 1.6 0" camera look-controls cursor="rayOrigin: mouse"></a-entity>
+
+      <a-entity id="forward" x="0" y="1" cursor-listener position="0 0.25 -3" rotation="-80 0 0">
+        <a-circle material="transparent: true;opacity: 0.5" radius="1"></a-circle>
+        <a-triangle vertex-a="0 0.35 0" vertex-b="-0.5 -0.25 0" vertex-c="0.5 -0.25 0"></a-triangle>
+      </a-entity>
+
+      <a-entity id="backward" x="0" y="-1" cursor-listener position="0 0.25 3" rotation="-80 180 0">
+        <a-circle material="transparent: true;opacity: 0.5" radius="1"></a-circle>
+        <a-triangle vertex-a="0 0.35 0" vertex-b="-0.5 -0.25 0" vertex-c="0.5 -0.25 0"></a-triangle>
+      </a-entity>
+
+      <a-entity id="right" x="1" y="0" cursor-listener position="3 0.25 0" rotation="-80 -90 0">
+        <a-circle material="transparent: true;opacity: 0.5" radius="1"></a-circle>
+        <a-triangle vertex-a="0 0.35 0" vertex-b="-0.5 -0.25 0" vertex-c="0.5 -0.25 0"></a-triangle>
+      </a-entity>
+
+      <a-entity id="left" x="-1" y="0" cursor-listener position="-3 0.25 0" rotation="-80 90 0">
+        <a-circle material="transparent: true;opacity: 0.5" radius="1"></a-circle>
+        <a-triangle vertex-a="0 0.35 0" vertex-b="-0.5 -0.25 0" vertex-c="0.5 -0.25 0"></a-triangle>
+      </a-entity>
+    </a-scene>
+    <script type="text/javascript">
+      CHANGE_STATE(0, 0);
+    </script>
+  </body>
+</html>
