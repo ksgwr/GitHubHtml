@@ -59,7 +59,7 @@ MIT License
 
 * A-Frame
     * 特徴
-    　 * A-Frameを利用してGoogle Street Viewの動作を模倣する。VRでなくマウスの操作を前提とする。
-        天球画像はGoogleMapのアプリでも取ることができ、完全な3Dモデルでなく実写重視の作り
+        * A-Frameを利用してGoogle Street Viewの動作を模倣する。VRでなくマウスの操作を前提とする。
+          天球画像はGoogleMapのアプリでも取ることができ、完全な3Dモデルでなく実写重視の作り
     * 使用技術
        * A-Frame
