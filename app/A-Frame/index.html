@@ -4,56 +4,150 @@
     <meta charset="utf-8">
     <title>A-Frame street view</title>
     <script src="js/aframe-0.8.0.min.js"></script>
+    <script src="js/aframe-html-shader-0.2.0.min.js"></script>
     <script type="text/javascript">
       // download from : https://www.caret-works.net/other/other.html
       MAP = [
-        [
-          {bg:'img/sphere_beach.jpg'},
-          {bg:'img/sphere_park.jpg'},
-	  {bg:'img/sphere_tunnel.jpg'}
-        ],
-	[
-	  null,
-          {bg:'img/sphere_funajima_bridge.jpg'},
-          null
-	]
+          [
+            {bg:'img/sphere_beach.jpg'},
+            {bg:'img/sphere_park.jpg'},
+	        {bg:'img/sphere_tunnel.jpg'}
+          ],
+	      [
+	        null,
+            {bg:'img/sphere_funajima_bridge.jpg'},
+            null
+	      ]
       ];
 
-      CHANGE_STATE = function(x, y) {
-	document.querySelector('#background').setAttribute('src', MAP[x][y].bg);
+      CHANGE_STATE = function(x, y, is_save) {
+          document.querySelector('#background').setAttribute('src', MAP[x][y].bg);
 
-	var setArrow = function(elm, visible, x, y) {
-           elm.setAttribute('visible', visible && MAP[x][y] != null);
-	   elm.setAttribute('x', x);
-           elm.setAttribute('y', y);
-        };
+	      let setArrow = function(elm, visible, x, y) {
+              elm.setAttribute('visible', visible && MAP[x][y] != null);
+	          elm.setAttribute('x', x);
+              elm.setAttribute('y', y);
+          };
 
-	setArrow(document.querySelector('#forward'), y+1 < MAP[x].length, x, y+1);
-	setArrow(document.querySelector('#backward'), y-1 >= 0, x, y-1);
-	setArrow(document.querySelector('#right'), x+1 < MAP.length, x+1, y);
-	setArrow(document.querySelector('#left'), x-1 >= 0, x-1, y);
+	      setArrow(document.querySelector('#forward'), y+1 < MAP[x].length, x, y+1);
+	      setArrow(document.querySelector('#backward'), y-1 >= 0, x, y-1);
+	      setArrow(document.querySelector('#right'), x+1 < MAP.length, x+1, y);
+	      setArrow(document.querySelector('#left'), x-1 >= 0, x-1, y);
+
+          Array.prototype.forEach.call(document.querySelectorAll('a-plane.htmlPlane'), function(e){
+              e.setAttribute('visible', e.classList.contains('p'+x+'-'+y));
+          });
+
+          if (is_save == undefined || is_save) {
+              path = '#' + x + ',' + y;
+              history.pushState({x:x,y:y}, path, path);
+          }
+
+          // TODO : 画面遷移図に動きがつくと良い
+          // TODO : ミニマップのOverlayを追加
       };
 
+      window.addEventListener('popstate', function(e) {
+          if (e.state) {
+             CHANGE_STATE(e.state.x, e.state.y, false);
+          }
+      });
+
       AFRAME.registerComponent('cursor-listener', {
-        init: function () {
-        this.el.addEventListener('mouseenter', function (evt) {
-	  this.setAttribute('scale', '1.2 1.2 1.2');
-        });
-	this.el.addEventListener('mouseleave', function (evt) {
-	  this.setAttribute('scale', '1 1 1');
-        });
-	this.el.addEventListener('click', function (evt) {
-	  CHANGE_STATE(parseInt(this.getAttribute('x'), 10), parseInt(this.getAttribute('y'), 10));
-        }, false);
-        }
+          init: function () {
+            this.el.addEventListener('mouseenter', function (evt) {
+	            this.setAttribute('scale', '1.2 1.2 1.2');
+            });
+	        this.el.addEventListener('mouseleave', function (evt) {
+	            this.setAttribute('scale', '1 1 1');
+            });
+	        this.el.addEventListener('click', function (evt) {
+                var target = this.getAttribute('target');
+                if (target == null) {
+	                CHANGE_STATE(parseInt(this.getAttribute('x'), 10), parseInt(this.getAttribute('y'), 10));
+                } else {
+                    var elm = document.querySelector('#overlay');
+                    elm.setAttribute('target', target);
+                    elm.click();
+                }
+            }, false);
+          }
       });
     </script>
+    <script src="js/jquery-3.3.1.min.js"></script>
+    <script type="text/javascript">
+        $(function(){
+            CHANGE_STATE(0, 0);
+
+            $('#overlay').on('click', function() {
+                let jthis = $(this);
+                let target = $(jthis.attr('target'));
+                if (jthis.is(':hidden')) {
+                    let w = $(window).width();
+                    let h = $(window).height();
+
+                    let cw = target.outerWidth();
+                    let ch = target.outerHeight();
+
+                    target.css({
+                        left: ((w - cw) / 2) + 'px',
+                        top: ((h - ch) / 2) + 'px',
+                        display: 'none',
+                        'z-index': 2
+                    });
+                    jthis.fadeIn();
+                    target.fadeIn();
+                } else {
+                    target.fadeOut();
+                    jthis.fadeOut();
+
+                    target.css({
+                        left:'',
+                        top:'',
+                        display:'',
+                        'z-index':''
+                    });
+                }
+            });
+        });
+    </script>
+    <style type="text/css">
+        #overlay {
+            width: 100%;
+            height: 100%;
+            position: fixed;
+            left: 0;
+            top: 0;
+            z-index: 1;
+            display:none;
+            background: rgba(0, 0, 0, 0.3);
+        }
+
+        div.shader {
+            position: fixed;
+            left: 0;
+            top: 0;
+            z-index: -1;
+            background: white;
+            border: 2px solid lightgray;
+        }
+
+        #div0-0-1 {
+        }
+
+        #div0-0-2 {
+        }
+    </style>
   </head>
   <body>
+
     <a-scene>
       <a-sky id="background" rotation="0 -130 0"></a-sky>
 
       <a-entity position="0 1.6 0" camera look-controls cursor="rayOrigin: mouse"></a-entity>
+
+      <a-plane class="htmlPlane p0-0" position="0 6 -20" target="#div0-0-1" width="4" height="1" cursor-listener material="shader:html;target: #div0-0-1;"></a-plane>
+      <a-plane class="htmlPlane p0-0" position="0 6 20" rotation="0 180 0" target="#div0-0-2" width="16" height="4" cursor-listener material="shader:html;target: #div0-0-2;"></a-plane>
 
       <a-entity id="forward" x="0" y="1" cursor-listener position="0 0.25 -3" rotation="-80 0 0">
         <a-circle material="transparent: true;opacity: 0.5" radius="1"></a-circle>
@@ -75,8 +169,29 @@
         <a-triangle vertex-a="0 0.35 0" vertex-b="-0.5 -0.25 0" vertex-c="0.5 -0.25 0"></a-triangle>
       </a-entity>
     </a-scene>
-    <script type="text/javascript">
-      CHANGE_STATE(0, 0);
-    </script>
+
+    <div id="overlay"></div>
+    <div id="htmlEntity">
+        <div id="div0-0-1" class="shader">
+            猿島(<a href="https://www.tryangle-web.com/sarushima.html">公式</a>)
+        </div>
+        <div id="div0-0-2" class="shader">
+            往復乗船料
+            <table border="1">
+                <tbody>
+                <tr>
+                    <th>大人</th>
+                    <th>小学生</th>
+                    <th>小学生未満</th>
+                </tr>
+                <tr>
+                    <td>1,300円</td>
+                    <td>650円</td>
+                    <td>無料</td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
   </body>
 </html>
