@@ -54,6 +54,8 @@
               document.querySelector('#camera').emit(animateId);
               setTimeout(function() {
                   func(x, y, is_save);
+                  // Animation bug回避
+                  document.querySelector('#camera').setAttribute('position', '0 1.6 0');
               }, 500);
           } else {
               func(x, y, is_save);
