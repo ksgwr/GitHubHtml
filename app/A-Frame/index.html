@@ -20,32 +20,44 @@
 	      ]
       ];
 
-      CHANGE_STATE = function(x, y, is_save) {
+      CHANGE_STATE = function(x, y, is_save, animateId) {
           let elm = MAP[x][y];
           document.querySelector('#background').setAttribute('src', elm.bg);
-          let pin = document.querySelector('#pinSvg').setAttribute('style', 'top:'+ elm.py + 'px;left:' + elm.px + 'px;');
+          document.querySelector('#pinSvg').setAttribute('style', 'top:'+ elm.py + 'px;left:' + elm.px + 'px;');
 
-	      let setArrow = function(elm, visible, x, y) {
-              elm.setAttribute('visible', visible && MAP[x][y] != null);
-	          elm.setAttribute('x', x);
-              elm.setAttribute('y', y);
+          let func = function(x, y, is_save) {
+              let setArrow = function(elm, visible, x, y) {
+                  elm.setAttribute('visible', visible && MAP[x][y] != null);
+                  elm.setAttribute('x', x);
+                  elm.setAttribute('y', y);
+              };
+
+              setArrow(document.querySelector('#forward'), y+1 < MAP[x].length, x, y+1);
+              setArrow(document.querySelector('#backward'), y-1 >= 0, x, y-1);
+              setArrow(document.querySelector('#right'), x+1 < MAP.length, x+1, y);
+              setArrow(document.querySelector('#left'), x-1 >= 0, x-1, y);
+
+              Array.prototype.forEach.call(document.querySelectorAll('a-plane.htmlPlane'), function(e){
+                  e.setAttribute('visible', e.classList.contains('p'+x+'-'+y));
+              });
+
+              if (is_save == undefined || is_save) {
+                  path = '#' + x + ',' + y;
+                  history.pushState({x:x,y:y}, path, path);
+              }
           };
 
-	      setArrow(document.querySelector('#forward'), y+1 < MAP[x].length, x, y+1);
-	      setArrow(document.querySelector('#backward'), y-1 >= 0, x, y-1);
-	      setArrow(document.querySelector('#right'), x+1 < MAP.length, x+1, y);
-	      setArrow(document.querySelector('#left'), x-1 >= 0, x-1, y);
-
-          Array.prototype.forEach.call(document.querySelectorAll('a-plane.htmlPlane'), function(e){
-              e.setAttribute('visible', e.classList.contains('p'+x+'-'+y));
-          });
-
-          if (is_save == undefined || is_save) {
-              path = '#' + x + ',' + y;
-              history.pushState({x:x,y:y}, path, path);
+          if (animateId != undefined) {
+              Array.prototype.forEach.call(document.querySelectorAll('a-entity.arrow, a-plane.htmlPlane'), function(e){
+                e.setAttribute('visible', false);
+              });
+              document.querySelector('#camera').emit(animateId);
+              setTimeout(function() {
+                  func(x, y, is_save);
+              }, 500);
+          } else {
+              func(x, y, is_save);
           }
-
-          // TODO : 画面遷移図に動きがつくと良い
       };
 
       // historyAPI ブラウザバック処理
@@ -65,11 +77,15 @@
 	            this.setAttribute('scale', '1 1 1');
             });
 	        this.el.addEventListener('click', function (evt) {
-                var target = this.getAttribute('target');
+                let target = this.getAttribute('target');
                 if (target == null) {
-	                CHANGE_STATE(parseInt(this.getAttribute('x'), 10), parseInt(this.getAttribute('y'), 10));
+                    document.querySelector('#camera').emit(this.getAttribute('id') + 'Camera');
+                    let elm = this;
+                    setTimeout(function() {
+                        CHANGE_STATE(parseInt(elm.getAttribute('x'), 10), parseInt(elm.getAttribute('y'), 10), true, elm.getAttribute('id') + 'CameraEnd');;
+                    }, 500);
                 } else {
-                    var elm = document.querySelector('#overlay');
+                    let elm = document.querySelector('#overlay');
                     elm.setAttribute('target', target);
                     elm.click();
                 }
@@ -288,27 +304,36 @@
     <a-scene>
       <a-sky id="background" rotation="0 -130 0"></a-sky>
 
-      <a-entity position="0 1.6 0" camera look-controls cursor="rayOrigin: mouse" rotation-reader></a-entity>
+      <a-entity id="camera" position="0 1.6 0" camera look-controls cursor="rayOrigin: mouse" rotation-reader>
+          <a-animation begin="forwardCamera" attribute="position" from="0 1.6 0" to="0 1.6 -5000" direction="normal" dur="500" easing="ease-in"></a-animation>
+          <a-animation begin="backwardCamera" attribute="position" from="0 1.6 0" to="0 1.6 5000" direction="normal" dur="500" easing="ease-in"></a-animation>
+          <a-animation begin="rightCamera" attribute="position" from="0 1.6 0" to="5000 1.6 0" direction="normal" dur="500" easing="ease-in"></a-animation>
+          <a-animation begin="leftCamera" attribute="position" from="0 1.6 0" to="-5000 1.6 0" direction="normal" dur="500" easing="ease-in"></a-animation>
+          <a-animation begin="forwardCameraEnd" attribute="position" from="0 1.6 5000" to="0 1.6 0" direction="normal" dur="500" easing="ease-out"></a-animation>
+          <a-animation begin="backwardCameraEnd" attribute="position" from="0 1.6 -5000" to="0 1.6 0" direction="normal" dur="500" easing="ease-out"></a-animation>
+          <a-animation begin="rightCameraEnd" attribute="position" from="-5000 1.6 0" to="0 1.6 0" direction="normal" dur="500" easing="ease-out"></a-animation>
+          <a-animation begin="leftCameraEnd" attribute="position" from="5000 1.6 0" to="-0 1.6 0" direction="normal" dur="500" easing="ease-out"></a-animation>
+      </a-entity>
 
       <a-plane class="htmlPlane p0-0" position="0 6 -20" target="#div0-0-1" width="4" height="1" cursor-listener material="shader:html;target: #div0-0-1;"></a-plane>
       <a-plane class="htmlPlane p0-0" position="0 6 20" rotation="0 180 0" target="#div0-0-2" width="16" height="4" cursor-listener material="shader:html;target: #div0-0-2;"></a-plane>
 
-      <a-entity id="forward" x="0" y="1" cursor-listener position="0 0.25 -3" rotation="-80 0 0">
+      <a-entity class="arrow" id="forward" x="0" y="1" cursor-listener position="0 0.25 -3" rotation="-80 0 0">
         <a-circle material="transparent: true;opacity: 0.5" radius="1"></a-circle>
         <a-triangle vertex-a="0 0.35 0" vertex-b="-0.5 -0.25 0" vertex-c="0.5 -0.25 0"></a-triangle>
       </a-entity>
 
-      <a-entity id="backward" x="0" y="-1" cursor-listener position="0 0.25 3" rotation="-80 180 0">
+      <a-entity class="arrow" id="backward" x="0" y="-1" cursor-listener position="0 0.25 3" rotation="-80 180 0">
         <a-circle material="transparent: true;opacity: 0.5" radius="1"></a-circle>
         <a-triangle vertex-a="0 0.35 0" vertex-b="-0.5 -0.25 0" vertex-c="0.5 -0.25 0"></a-triangle>
       </a-entity>
 
-      <a-entity id="right" x="1" y="0" cursor-listener position="3 0.25 0" rotation="-80 -90 0">
+      <a-entity class="arrow" id="right" x="1" y="0" cursor-listener position="3 0.25 0" rotation="-80 -90 0">
         <a-circle material="transparent: true;opacity: 0.5" radius="1"></a-circle>
         <a-triangle vertex-a="0 0.35 0" vertex-b="-0.5 -0.25 0" vertex-c="0.5 -0.25 0"></a-triangle>
       </a-entity>
 
-      <a-entity id="left" x="-1" y="0" cursor-listener position="-3 0.25 0" rotation="-80 90 0">
+      <a-entity class="arrow" id="left" x="-1" y="0" cursor-listener position="-3 0.25 0" rotation="-80 90 0">
         <a-circle material="transparent: true;opacity: 0.5" radius="1"></a-circle>
         <a-triangle vertex-a="0 0.35 0" vertex-b="-0.5 -0.25 0" vertex-c="0.5 -0.25 0"></a-triangle>
       </a-entity>
