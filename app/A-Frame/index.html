@@ -9,19 +9,21 @@
       // download from : https://www.caret-works.net/other/other.html
       MAP = [
           [
-            {bg:'img/sphere_beach.jpg'},
-            {bg:'img/sphere_park.jpg'},
-	        {bg:'img/sphere_tunnel.jpg'}
+            {bg:'img/sphere_beach.jpg', px:0, py:200},
+            {bg:'img/sphere_park.jpg', px:0, py:100},
+	        {bg:'img/sphere_tunnel.jpg', px:0, py:0}
           ],
 	      [
 	        null,
-            {bg:'img/sphere_funajima_bridge.jpg'},
+            {bg:'img/sphere_funajima_bridge.jpg', px:100, py:100},
             null
 	      ]
       ];
 
       CHANGE_STATE = function(x, y, is_save) {
-          document.querySelector('#background').setAttribute('src', MAP[x][y].bg);
+          let elm = MAP[x][y];
+          document.querySelector('#background').setAttribute('src', elm.bg);
+          let pin = document.querySelector('#pinSvg').setAttribute('style', 'top:'+ elm.py + 'px;left:' + elm.px + 'px;');
 
 	      let setArrow = function(elm, visible, x, y) {
               elm.setAttribute('visible', visible && MAP[x][y] != null);
@@ -44,15 +46,16 @@
           }
 
           // TODO : 画面遷移図に動きがつくと良い
-          // TODO : ミニマップのOverlayを追加
       };
 
+      // historyAPI ブラウザバック処理
       window.addEventListener('popstate', function(e) {
           if (e.state) {
              CHANGE_STATE(e.state.x, e.state.y, false);
           }
       });
 
+      // クリック系イベント追加
       AFRAME.registerComponent('cursor-listener', {
           init: function () {
             this.el.addEventListener('mouseenter', function (evt) {
@@ -73,12 +76,37 @@
             }, false);
           }
       });
+
+      // カメライベント(miniMap反映)
+      AFRAME.registerComponent('rotation-reader', {
+          tick: function () {
+              let miniMap = document.querySelector('#miniMap');
+              if (miniMap.style.display != 'none') {
+                  let r = this.el.getAttribute('rotation');
+                  let pinGroup = document.querySelector('#pinGroup');
+                  pinGroup.setAttribute('transform', 'translate(50 50) rotate(' + -1 * r.y + ' 0 0)');
+              }
+          }
+      });
+
     </script>
     <script src="js/jquery-3.3.1.min.js"></script>
     <script type="text/javascript">
         $(function(){
+            // loading処理
+            let scene = $('a-scene').get(0);
+            if (scene.hasLoaded) {
+                $('#loader').hide();
+            } else {
+                scene.addEventListener('loaded', function(){
+                    $('#loader').hide();
+                });
+            }
+
+            // 初期化
             CHANGE_STATE(0, 0);
 
+            // HTML Entityクリック時の処理
             $('#overlay').on('click', function() {
                 let jthis = $(this);
                 let target = $(jthis.attr('target'));
@@ -90,10 +118,10 @@
                     let ch = target.outerHeight();
 
                     target.css({
-                        left: ((w - cw) / 2) + 'px',
-                        top: ((h - ch) / 2) + 'px',
+                        left: ((w - cw) / 2),
+                        top: ((h - ch) / 2),
                         display: 'none',
-                        'z-index': 2
+                        'z-index': 2000
                     });
                     jthis.fadeIn();
                     target.fadeIn();
@@ -109,16 +137,70 @@
                     });
                 }
             });
+
+            // MiniMap系処理
+            $('#mapButton').on('click', function() {
+                $(this).hide();
+                $('#miniMap').show();
+            });
+            $('#mapClose').on('click', function() {
+                $('#miniMap').hide();
+                $('#mapButton').show();
+            });
+            $('rect.area').on('click', function() {
+                let jthis = $(this);
+                let x = jthis.attr('x');
+                let y = jthis.attr('y');
+
+                let minDist = 9999;
+                let minX = 0;
+                let minY = 0;
+                for (let i=0;i<MAP.length;i++) {
+                    for (let j=0;j<MAP[i].length;j++) {
+                        let elm = MAP[i][j];
+                        if (elm != null) {
+                            let dist = Math.pow(elm.px - x, 2) + Math.pow(elm.py - y, 2);
+                            if (minDist > dist) {
+                                minDist = dist;
+                                minX = i;
+                                minY = j;
+                            }
+                        }
+                    }
+                }
+
+                CHANGE_STATE(minX, minY);
+            });
         });
     </script>
     <style type="text/css">
+        #loader {
+            width: 100%;
+            height: 100%;
+            top : 0;
+            left: 0;
+            position: fixed;
+            z-index: 1000;
+            background-color: white;
+        }
+
+        #loader>p {
+            position: absolute;
+            top: 50%;
+            margin-top: -0.5em;
+            width: 100%;
+            text-align: center;
+            font-size: 200%;
+            font-weight: bold;
+        }
+
         #overlay {
             width: 100%;
             height: 100%;
             position: fixed;
             left: 0;
             top: 0;
-            z-index: 1;
+            z-index: 1000;
             display:none;
             background: rgba(0, 0, 0, 0.3);
         }
@@ -133,18 +215,80 @@
         }
 
         #div0-0-1 {
+            font-size: 50px;
         }
 
-        #div0-0-2 {
+        #mapButton {
+            position: fixed;
+            left: 20px;
+            bottom: 10px;
+            cursor: pointer;
+            border: 0;
+            padding: 0.5%;
+            min-width: 50px;
+            min-height: 30px;
+            z-index: 1;
+            font-size: 30px;
+            font-weight: bold;
+            background: rgba(0,0,0,.35);
+            user-select: none;
+        }
+        #mapButton:hover {
+            background: lightgray;
+        }
+
+        #miniMap {
+            position: fixed;
+            left: 20px;
+            bottom: 10px;
+            border: 0;
+            padding: 0.5%;
+            min-width: 300px;
+            min-height: 300px;
+            z-index: 1;
+            background: rgba(0,0,0,.35);
+            /* display: none; */
+        }
+
+        #mapClose {
+            float:right;
+            margin-top:-5px;
+            margin-right:-5px;
+            cursor:pointer;
+            color:white;
+            boarder: 3px solid white;
+            border-radius: 30px;
+            background: gray;
+            font-size: 30px;
+            font-weight: bold;
+            display: inline-block;
+            line-height: 0px;
+            padding: 11px 3px;
+        }
+        #mapClose:before {
+            content: "x";
+        }
+        rect.area {
+            fill:rgb(255,255,255);
+            stroke-width:3;
+            stroke:rgb(0,0,0);
+            cursor:pointer;
+        }
+        #pinSvg {
+            position: absolute;
+            margin: 10px;
         }
     </style>
   </head>
   <body>
+　　<div id="loader">
+        <p>loading...</p>
+    </div>
 
     <a-scene>
       <a-sky id="background" rotation="0 -130 0"></a-sky>
 
-      <a-entity position="0 1.6 0" camera look-controls cursor="rayOrigin: mouse"></a-entity>
+      <a-entity position="0 1.6 0" camera look-controls cursor="rayOrigin: mouse" rotation-reader></a-entity>
 
       <a-plane class="htmlPlane p0-0" position="0 6 -20" target="#div0-0-1" width="4" height="1" cursor-listener material="shader:html;target: #div0-0-1;"></a-plane>
       <a-plane class="htmlPlane p0-0" position="0 6 20" rotation="0 180 0" target="#div0-0-2" width="16" height="4" cursor-listener material="shader:html;target: #div0-0-2;"></a-plane>
@@ -192,6 +336,23 @@
                 </tbody>
             </table>
         </div>
+    </div>
+
+    <div id="mapButton">MAP</div>
+    <div id="miniMap">
+        <span id="mapClose"></span>
+        <svg width="300px" height="300px">
+            <rect x="0" y="0" width="100" height="100" class="area" />
+            <rect x="0" y="100" width="100" height="100" class="area" />
+            <rect x="0" y="200" width="100" height="100" class="area" />
+            <rect x="100" y="100" width="100" height="100" class="area" />
+        </svg>
+        <svg id="pinSvg" width="100px" height="100px">
+            <g id="pinGroup" transform="translate(50 50) rotate(0 0 0)">
+                <path id="pinVision" d="M 0,0 L -32,-32 a 45 45 -135 0 1 64,0 z" fill="yellow" opacity="0.50" draggable="true"/>
+                <circle id="pinMan" cx="0" cy="0" r="10" fill="magenta"/>
+            </g>
+        </svg>
     </div>
   </body>
 </html>
